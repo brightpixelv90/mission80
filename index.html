@@ -672,10 +672,10 @@ const GOALS_DEF = (dayType) => {
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 function loadState(){
-  try{return JSON.parse(localStorage.getItem('op80_v2')||'null');}catch(e){return null;}
+  try{return JSON.parse(localStorage.getItem('op80_v3')||'null');}catch(e){return null;}
 }
 function saveState(){
-  try{localStorage.setItem('op80_v2',JSON.stringify(G));}catch(e){}
+  try{localStorage.setItem('op80_v3',JSON.stringify(G));}catch(e){}
 }
 
 const TODAY = new Date().toDateString();
@@ -699,8 +699,9 @@ let G = saved || {
 // If existing user has no startDate yet, set it
 if(!G.startDate) G.startDate = '2026-06-23';
 
-// Today's session
-let todayRec = G.history.find(h=>h.date===TODAY) || {
+// Today's session — defensive merge so old/partial records never crash
+const _existingRec = G.history.find(h=>h.date===TODAY);
+let todayRec = {
   date: TODAY,
   weight: null,
   ring: {},
@@ -708,8 +709,14 @@ let todayRec = G.history.find(h=>h.date===TODAY) || {
   goalStates: {},
   xp: 0,
   snacks: [],
-  supps: {},   // supplements tracked per day, not globally
+  supps: {},
   saved: false,
+  ..._existingRec,  // overlay any saved fields
+  // ensure these are always objects even if saved as null
+  ring: _existingRec?.ring || {},
+  goalStates: _existingRec?.goalStates || {},
+  snacks: _existingRec?.snacks || [],
+  supps: _existingRec?.supps || {},
 };
 
 let charts = {};
@@ -809,8 +816,13 @@ function init(){
     updateWeightDisplay();
   } catch(e){
     console.error('Init error:',e);
-    document.getElementById('heroDate').textContent='Ready';
-    document.getElementById('heroMission').textContent='Mission: Get to 80 kg 🔥';
+    try{
+      const now=new Date();
+      const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      document.getElementById('heroDate').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} · Dubai`;
+      document.getElementById('heroMission').textContent='Mission: Get to 80 kg 🔥';
+    }catch(e2){}
   }
 }
 
@@ -1561,6 +1573,7 @@ function showPage(name,btn){
 }
 
 // ── VIDEO TOGGLE ─────────────────────────────────────────────────────────────
+function savePastDay(){
   const date=document.getElementById('pastDate').value;
   const weight=parseFloat(document.getElementById('pastWeight').value);
   if(!date){showToast('Pick a date first');return;}
