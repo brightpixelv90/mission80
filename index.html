@@ -356,7 +356,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <div class="page" id="page-nutrition">
   <div class="cal-wrap">
     <div class="cal-header">
-      <div><span class="cal-num" id="calNum">1,050</span> <span style="font-size:13px;color:var(--muted)">kcal</span></div>
+      <div><span class="cal-num" id="calNum">0</span> <span style="font-size:13px;color:var(--muted)">kcal</span></div>
       <div class="cal-target">target 2,100</div>
     </div>
     <div class="cal-bar"><div class="cal-fill" id="calFill" style="width:50%"></div></div>
@@ -429,6 +429,29 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div class="chart-title">Weekly workouts</div>
     <div class="chart-sub">Completions per week</div>
     <div class="chart-wrap"><canvas id="workoutChart"></canvas></div>
+  </div>
+
+  <div class="section-label">Log a past day</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:12px;">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Forgot to fill in yesterday? Enter it here.</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="date" id="pastDate" style="flex:1;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:14px;outline:none;">
+      <input type="number" id="pastWeight" placeholder="kg" step="0.1" style="width:80px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:14px;outline:none;">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+      <input type="number" id="pastRecovery" placeholder="Recovery /100" style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;">
+      <input type="number" id="pastHrv" placeholder="HRV ms" style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;">
+      <input type="number" id="pastSleep" placeholder="Sleep /100" style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;">
+      <input type="number" id="pastSteps" placeholder="Steps" style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="pastGoalPills">
+      <div class="dev-pill" onclick="togglePill(this)" data-val="workout">Workout done</div>
+      <div class="dev-pill" onclick="togglePill(this)" data-val="walk">Walk done</div>
+      <div class="dev-pill" onclick="togglePill(this)" data-val="badminton">Badminton done</div>
+      <div class="dev-pill" onclick="togglePill(this)" data-val="supps">Supplements taken</div>
+      <div class="dev-pill" onclick="togglePill(this)" data-val="nolate">Nothing after 9pm</div>
+    </div>
+    <button onclick="savePastDay()" style="width:100%;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:11px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">Save past day</button>
   </div>
 
   <div class="section-label">Deviation log</div>
@@ -591,7 +614,7 @@ const WORKOUT_SCHEDULE = {
   3:{type:'walk',    name:'Rest + Walk',    sub:'Wed · 60 min evening walk', note:'Active recovery — muscles repair and grow during rest'},
   4:{type:'push', name:'Push + Core', sub:'Thu · Chest · Shoulders · Triceps · Abs'},
   5:{type:'pull', name:'Pull + Legs', sub:'Fri · Back · Biceps · Glutes · Quads'},
-  6:{type:'walk',    name:'Saturday Walk',  sub:'Sat · 60 min brisk walk',   note:'NEAT calories — your offset for weekend eating'},
+  6:{type:'walk',    name:'Saturday Walk',  sub:'Sat · 60 min brisk walk',   note:'Burns extra calories — offsets weekend eating'},
   0:{type:'badminton',name:'Badminton',     sub:'Sun · 2 hours',             note:'~600–800 kcal · your biggest weekly burn · enjoy it'},
 };
 
@@ -682,9 +705,10 @@ let todayRec = G.history.find(h=>h.date===TODAY) || {
   weight: null,
   ring: {},
   goals: {},
-  goalStates: {}, // 'done'|'deviated'|'skipped'|null
+  goalStates: {},
   xp: 0,
   snacks: [],
+  supps: {},   // supplements tracked per day, not globally
   saved: false,
 };
 
@@ -1091,11 +1115,10 @@ function renderSnackLog(){
 
 function updateCalBar(){
   const snackTotal=(todayRec.snacks||[]).reduce((a,s)=>a+s.kcal,0);
-  const base=1050;
-  const total=base+snackTotal;
+  const total=snackTotal;
   const pct=Math.min((total/2100)*100,105);
   document.getElementById('calNum').textContent=total.toLocaleString();
-  document.getElementById('calLeft').textContent=total<2100?`${2100-total} remaining`:'Target reached';
+  document.getElementById('calLeft').textContent=total<2100?`${(2100-total).toLocaleString()} remaining`:'Target reached';
   const fill=document.getElementById('calFill');
   fill.style.width=pct+'%';
   fill.className='cal-fill'+(total>2200?' over':total>1900?' warn':'');
@@ -1149,7 +1172,7 @@ function renderWorkout(){
       <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:var(--r-sm);padding:16px;margin-bottom:12px;border:1px solid rgba(245,200,66,0.2);">
         <div style="font-size:10px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Program starts Monday 23 Jun</div>
         <div style="font-size:20px;font-weight:800;">Get ready 💪</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Today — ${isSunday?'2 hrs badminton · ~600–800 kcal':'60 min walk · NEAT calories'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Today — ${isSunday?'2 hrs badminton · enjoy it':'60 min walk · burn extra calories'}</div>
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:10px;">
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">WHAT MONDAY LOOKS LIKE — Push + Core · Foundation Phase</div>
@@ -1245,18 +1268,20 @@ function saveStartDate(){
 function renderSupps(){
   const el=document.getElementById('suppGrid');
   if(!el) return;
+  const supps=todayRec.supps||{};
   el.innerHTML=SUPPS.map(s=>`
-    <div class="supp-btn${G.supps[s.id]?' taken':''}" onclick="toggleSupp('${s.id}',this)">
+    <div class="supp-btn${supps[s.id]?' taken':''}" onclick="toggleSupp('${s.id}',this)">
       <div class="supp-dot"></div>
       <div><div class="supp-name">${s.name}</div><div class="supp-note">${s.note}</div></div>
     </div>`).join('');
 }
 
 function toggleSupp(id,el){
-  G.supps[id]=!G.supps[id];
-  el.classList.toggle('taken',G.supps[id]);
+  if(!todayRec.supps) todayRec.supps={};
+  todayRec.supps[id]=!todayRec.supps[id];
+  el.classList.toggle('taken',todayRec.supps[id]);
   saveState();
-  const allDone=SUPPS.every(s=>G.supps[s.id]);
+  const allDone=SUPPS.every(s=>todayRec.supps[s.id]);
   if(allDone) showToast('All 9 supplements taken ✓',true);
 }
 
@@ -1536,6 +1561,66 @@ function showPage(name,btn){
 }
 
 // ── VIDEO TOGGLE ─────────────────────────────────────────────────────────────
+  const date=document.getElementById('pastDate').value;
+  const weight=parseFloat(document.getElementById('pastWeight').value);
+  if(!date){showToast('Pick a date first');return;}
+  if(date===TODAY){showToast("That's today — use the Today tab");return;}
+
+  const recovery=document.getElementById('pastRecovery').value;
+  const hrv=document.getElementById('pastHrv').value;
+  const sleep=document.getElementById('pastSleep').value;
+  const steps=document.getElementById('pastSteps').value;
+
+  // Get selected goal pills
+  const selectedGoals={};
+  document.querySelectorAll('#pastGoalPills .dev-pill.sel').forEach(p=>{
+    selectedGoals[p.dataset.val]='done';
+  });
+
+  // Calculate XP for this day
+  let xp=0;
+  if(!isNaN(weight)) xp+=10;
+  if(selectedGoals.workout) xp+=50;
+  if(selectedGoals.walk) xp+=30;
+  if(selectedGoals.badminton) xp+=40;
+  if(selectedGoals.supps) xp+=20;
+  if(selectedGoals.nolate) xp+=25;
+
+  // Build or update the past record
+  const dateStr=new Date(date).toDateString();
+  const existing=G.history.findIndex(h=>h.date===dateStr);
+  const rec={
+    date:dateStr,
+    weight:isNaN(weight)?null:weight,
+    ring:{recovery,hrv,sleep,steps},
+    goalStates:selectedGoals,
+    xp,
+    snacks:[],
+    supps:{},
+    saved:true,
+  };
+  if(existing>=0) G.history[existing]=rec;
+  else G.history.push(rec);
+
+  // Update global stats
+  if(!isNaN(weight)&&weight<G.lowestWeight) G.lowestWeight=weight;
+  G.totalXP+=xp;
+  saveState();
+
+  // Reset pills
+  document.querySelectorAll('#pastGoalPills .dev-pill').forEach(p=>p.classList.remove('sel'));
+  document.getElementById('pastDate').value='';
+  document.getElementById('pastWeight').value='';
+  document.getElementById('pastRecovery').value='';
+  document.getElementById('pastHrv').value='';
+  document.getElementById('pastSleep').value='';
+  document.getElementById('pastSteps').value='';
+
+  renderCharts();
+  showToast(`Past day saved · +${xp} XP`,true);
+}
+
+
 function toggleVideo(id, ytId, btn){
   const wrap=document.getElementById(id);
   const isOpen=wrap.classList.contains('open');
