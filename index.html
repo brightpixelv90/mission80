@@ -511,7 +511,7 @@ const PHASES = [
 
 function getPhase(startDate){
   if(!startDate) return 1;
-  const todayStr=new Date().toISOString().slice(0,10);
+  const todayStr=dubaiDateStr();
   if(todayStr < startDate) return 1;
   const msPerWeek=7*24*60*60*1000;
   const weeks=Math.floor((new Date(todayStr)-new Date(startDate))/msPerWeek);
@@ -523,7 +523,7 @@ function getPhase(startDate){
 
 function getWeekNum(startDate){
   if(!startDate) return 1;
-  const todayStr=new Date().toISOString().slice(0,10);
+  const todayStr=dubaiDateStr();
   if(todayStr < startDate) return 1;
   const msPerWeek=7*24*60*60*1000;
   const diff=new Date(todayStr)-new Date(startDate);
@@ -640,7 +640,7 @@ const GOALS_DEF = (dayType) => {
   const isBadminton  = dayType === 'badminton';
   const isPreProgram = dayType === 'preprogram';
   // Weekend days have no strict meal plan goals (Sat walk, Sun badminton, pre-program days)
-  const isWeekendDay = isWalk && new Date().getDay()===6 || isBadminton || isPreProgram;
+  const isWeekendDay = isWalk && dubaiDay()===6 || isBadminton || isPreProgram;
 
   if(isPreProgram) return [
     {id:'weight',  icon:'⚖️', label:'Weight logged',       sub:'Morning, post-toilet, before food', xp:10},
@@ -678,7 +678,36 @@ function saveState(){
   try{localStorage.setItem('op80_v3',JSON.stringify(G));}catch(e){}
 }
 
-const TODAY = new Date().toDateString();
+// ── DUBAI TIME HELPERS (UTC+4, no DST) ───────────────────────────────────────
+function dubaiNow(){
+  // Returns a Date object adjusted to Dubai local time (UTC+4)
+  return new Date(Date.now() + 4*60*60*1000);
+}
+function dubaiDateStr(){
+  // Returns 'YYYY-MM-DD' in Dubai time
+  return dubaiNow().toISOString().slice(0,10);
+}
+function dubaiDay(){
+  // Returns day of week 0-6 in Dubai time
+  return dubaiNow().getUTCDay();
+}
+function dubaiDateString(){
+  // Returns a string like 'Mon Jun 23 2026' in Dubai time — used as record key
+  const d=dubaiNow();
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getUTCDay()]} ${months[d.getUTCMonth()]} ${d.getUTCDate()} ${d.getUTCFullYear()}`;
+}
+
+function dubaiDateStringFrom(date){
+  // Converts any Date object to Dubai-equivalent date string key
+  const d=new Date(date.getTime()+4*60*60*1000);
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getUTCDay()]} ${months[d.getUTCMonth()]} ${d.getUTCDate()} ${d.getUTCFullYear()}`;
+}
+
+const TODAY = dubaiDateString();
 
 let saved = loadState();
 let G = saved || {
@@ -730,12 +759,12 @@ function getLevel(xp){
 function isProgramStarted(){
   if(!G.startDate) return false;
   // Compare date strings directly to avoid UTC/timezone issues
-  const todayStr=new Date().toISOString().slice(0,10);
+  const todayStr=dubaiDateStr();
   return todayStr >= G.startDate;
 }
 
 function getDayType(){
-  const dow = new Date().getDay();
+  const dow = dubaiDay();
   if(!isProgramStarted()){
     if(dow===0) return 'badminton';
     if(dow===6) return 'walk';
@@ -783,10 +812,10 @@ function updateXPUI(){
 // ── INIT ─────────────────────────────────────────────────────────────────────
 function init(){
   try{
-    const now=new Date();
+    const now=dubaiNow();
     const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    document.getElementById('heroDate').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} · Dubai`;
+    document.getElementById('heroDate').textContent=`${days[now.getUTCDay()]}, ${now.getUTCDate()} ${months[now.getUTCMonth()]} · Dubai`;
 
     // Streak calc
     const daysSinceLastCheckin = G.lastCheckinDate
@@ -817,10 +846,10 @@ function init(){
   } catch(e){
     console.error('Init error:',e);
     try{
-      const now=new Date();
+      const now=dubaiNow();
       const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
       const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      document.getElementById('heroDate').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} · Dubai`;
+      document.getElementById('heroDate').textContent=`${days[now.getUTCDay()]}, ${now.getUTCDate()} ${months[now.getUTCMonth()]} · Dubai`;
       document.getElementById('heroMission').textContent='Mission: Get to 80 kg 🔥';
     }catch(e2){}
   }
@@ -829,12 +858,12 @@ function init(){
 // ── STREAK ROW ───────────────────────────────────────────────────────────────
 function renderStreak(){
   const days=['M','T','W','T','F','S','S'];
-  const now=new Date();
+  const now=dubaiNow();
   let html='';
   for(let i=0;i<7;i++){
-    const d=new Date(now);
-    d.setDate(now.getDate()-6+i);
-    const ds=d.toDateString();
+    const d=new Date(now.getTime());
+    d.setUTCDate(now.getUTCDate()-6+i);
+    const ds=dubaiDateStringFrom(d);
     const isToday=ds===TODAY;
     const rec=G.history.find(h=>h.date===ds);
     let cls='',icon='';
@@ -843,7 +872,7 @@ function renderStreak(){
     else if(d<now){cls='missed';icon='×';}
     html+=`<div class="streak-day">
       <div class="streak-dot ${cls}">${icon}</div>
-      <div class="streak-lbl">${days[d.getDay()]}</div>
+      <div class="streak-lbl">${days[d.getUTCDay()]}</div>
     </div>`;
   }
   document.getElementById('streakRow').innerHTML=html;
@@ -1141,7 +1170,7 @@ function renderNutrition(){
   renderSnackLog();
   updateCalBar();
   const el=document.getElementById('mealPlanEl');
-  const dow=new Date().getDay();
+  const dow=dubaiDay();
   const isWeekend=(dow===0||dow===5||dow===6);
   const preProgram=!isProgramStarted();
 
@@ -1169,7 +1198,7 @@ function renderNutrition(){
 
 // ── WORKOUT ──────────────────────────────────────────────────────────────────
 function renderWorkout(){
-  const dow=new Date().getDay();
+  const dow=dubaiDay();
   const wo=WORKOUT_SCHEDULE[dow];
   const el=document.getElementById('workoutContent');
   const programStarted=isProgramStarted();
