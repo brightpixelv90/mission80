@@ -716,7 +716,12 @@ function init(){
   const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   document.getElementById('hDate').textContent=`${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]} · Dubai`;
-  document.getElementById('hTitle').textContent=`Day ${G.history.length+1}`;
+  // Day number = days since program start (not history length)
+  const progStartDate=uaeDateFromStr(PROGRAM_START);
+  const todayDate=new Date();
+  todayDate.setHours(0,0,0,0);
+  const dayNum=Math.max(1,Math.floor((todayDate-progStartDate)/(24*3600*1000))+1);
+  document.getElementById('hTitle').textContent=`Day ${dayNum}`;
 
   // Streak
   if(G.lastDate){
@@ -1206,7 +1211,15 @@ function renderCharts(){
   // Sort history by date before rendering
   G.history.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
-  const hist=G.history.filter(h=>h.weight).slice(-14);
+  // Merge today's live record into history for charting (don't mutate G.history)
+  const liveHistory=[...G.history];
+  const todayIdx=liveHistory.findIndex(h=>h.date===TODAY);
+  const liveToday={...T};
+  if(todayIdx>=0) liveHistory[todayIdx]=liveToday;
+  else if(T.weight) liveHistory.push(liveToday);
+
+  const hist=liveHistory.filter(h=>h.weight).slice(-14);
+
   // Format 'Mon Jun 22 2026' → 'Mon 22'
   function fmtDate(dateKey){
     const p=dateKey.split(' '); // ['Mon','Jun','22','2026']
@@ -1234,7 +1247,7 @@ function renderCharts(){
   }
 
   // HRV chart
-  const hrvHist=G.history.filter(h=>h.ring?.hrv).slice(-14);
+  const hrvHist=liveHistory.filter(h=>h.ring?.hrv).slice(-14);
   if(charts.hrv) charts.hrv.destroy();
   const hrvEl=document.getElementById('hrvChart');
   if(hrvHist.length&&hrvEl){
@@ -1250,7 +1263,7 @@ function renderCharts(){
   }
 
   // RHR chart
-  const rhrHist=G.history.filter(h=>h.ring?.rhr).slice(-14);
+  const rhrHist=liveHistory.filter(h=>h.ring?.rhr).slice(-14);
   if(charts.rhr) charts.rhr.destroy();
   const rhrEl=document.getElementById('rhrChart');
   if(rhrHist.length&&rhrEl){
@@ -1277,7 +1290,7 @@ function renderCharts(){
   const progStart=uaeDateFromStr(PROGRAM_START);
   const msPerWk=7*24*3600*1000;
   const wkMap={};
-  G.history.forEach(h=>{
+  liveHistory.forEach(h=>{
     if(!h.date) return;
     const hd=new Date(h.date); // toDateString format parses fine
     const wkNum=Math.max(1,Math.floor((hd-progStart)/msPerWk)+1);
