@@ -433,26 +433,50 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 </div>
 
 <script>
-// ── UAE TIME (UTC+4, no DST) ──────────────────────────────────────────────────
-function uaeNow(){ return new Date(Date.now()+4*60*60*1000); }
-function uaeDateStr(){ return uaeNow().toISOString().slice(0,10); } // YYYY-MM-DD
-function uaeDay(){ return uaeNow().getUTCDay(); } // 0=Sun…6=Sat
-function uaeDateKey(d){
-  // d = Date object → returns 'Mon Jun 23 2026' style key in UAE time
-  const x=new Date(d.getTime()+4*60*60*1000);
+// ── UAE TIME (Asia/Dubai, UTC+4, no DST) ──────────────────────────────────────
+const UAE_TZ = 'Asia/Dubai';
+
+function uaeDateStr(){
+  // Returns 'YYYY-MM-DD' in UAE time
+  return new Date().toLocaleDateString('en-CA', {timeZone: UAE_TZ});
+}
+function uaeDay(){
+  // Returns day of week 0=Sun…6=Sat in UAE time
+  return parseInt(new Date().toLocaleDateString('en-US', {timeZone: UAE_TZ, weekday:'numeric'}))||0;
+  // weekday:'numeric' not supported — use date to compute
+}
+function uaeDayOfWeek(){
+  const s = uaeDateStr(); // 'YYYY-MM-DD'
+  const d = new Date(s + 'T00:00:00'); // local midnight
+  return d.getDay();
+}
+function uaeDateKey(dateStr){
+  // dateStr = 'YYYY-MM-DD' → 'Mon Jun 23 2026'
+  const d = new Date(dateStr + 'T00:00:00');
   const DS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${DS[x.getUTCDay()]} ${MS[x.getUTCMonth()]} ${x.getUTCDate()} ${x.getUTCFullYear()}`;
+  return `${DS[d.getDay()]} ${MS[d.getMonth()]} ${d.getDate()} ${d.getFullYear()}`;
 }
-function uaeTodayKey(){ return uaeDateKey(new Date()); }
+function uaeTodayKey(){ return uaeDateKey(uaeDateStr()); }
+function uaeDisplayDate(){
+  return new Date().toLocaleDateString('en-GB', {
+    timeZone: UAE_TZ,
+    weekday:'long', day:'numeric', month:'short'
+  });
+}
+// Offset a date key by N days (for streak row)
+function uaeDateKeyOffset(n){
+  const s=uaeDateStr();
+  const d=new Date(s+'T12:00:00');
+  d.setDate(d.getDate()+n);
+  return uaeDateKey(d.toISOString().slice(0,10));
+}
 function uaeDateFromStr(s){
-  // s = 'YYYY-MM-DD' → Date object at UAE midnight
-  const [y,m,d]=s.split('-').map(Number);
-  return new Date(Date.UTC(y,m-1,d)-4*60*60*1000);
+  return new Date(s+'T00:00:00');
 }
 
 const TODAY = uaeTodayKey();
-const PROGRAM_START = '2026-06-23'; // YYYY-MM-DD
+const PROGRAM_START = '2026-06-22'; // YYYY-MM-DD
 
 // ── LEVELS & BADGES ───────────────────────────────────────────────────────────
 const LEVELS=[
@@ -699,7 +723,7 @@ function init(){
   // Mission line
   const ph=phase(), w=weekNum(), started=programStarted();
   document.getElementById('hMission').textContent=
-    !started ? `Program starts Monday 23 Jun · Supplements tonight 💊`
+    !started ? `Program starts today · Week 1 · Foundation Phase 🔥`
     : `Week ${w} · Phase ${ph}: ${PHASES[ph-1].name} · Streak: ${G.streak} days 🔥`;
 
   updateXP();
@@ -1013,7 +1037,7 @@ function renderWorkout(){
     const isSun=uaeDay()===0;
     el.innerHTML=`
       <div class="wo-hero">
-        <div class="wo-day">Program starts Monday 23 Jun</div>
+        <div class="wo-day">Program starts today</div>
         <div class="wo-name">Get ready 💪</div>
         <div class="wo-sub">Today — ${isSun?'2 hrs badminton · enjoy it':'60 min walk'}</div>
       </div>
