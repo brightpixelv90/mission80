@@ -1214,9 +1214,12 @@ function renderCharts(){
   // Merge today's live record into history for charting (don't mutate G.history)
   const liveHistory=[...G.history];
   const todayIdx=liveHistory.findIndex(h=>h.date===TODAY);
-  const liveToday={...T};
-  if(todayIdx>=0) liveHistory[todayIdx]=liveToday;
-  else if(T.weight) liveHistory.push(liveToday);
+  if(todayIdx>=0){
+    liveHistory[todayIdx]={...liveHistory[todayIdx],...T};
+  } else if(T.weight){
+    liveHistory.push({...T});
+  }
+  liveHistory.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
   const hist=liveHistory.filter(h=>h.weight).slice(-14);
 
@@ -1251,12 +1254,16 @@ function renderCharts(){
   if(charts.hrv) charts.hrv.destroy();
   const hrvEl=document.getElementById('hrvChart');
   if(hrvHist.length&&hrvEl){
+    const hrvVals=hrvHist.map(h=>parseFloat(h.ring.hrv)).filter(v=>!isNaN(v));
     charts.hrv=new Chart(hrvEl.getContext('2d'),{
       type:'line',
       data:{labels:hrvHist.map(h=>fmtDate(h.date)),
-        datasets:[{data:hrvHist.map(h=>parseFloat(h.ring.hrv)),borderColor:'#5b9cf5',borderWidth:2,
+        datasets:[{data:hrvVals,borderColor:'#5b9cf5',borderWidth:2,
           backgroundColor:'rgba(91,156,245,0.08)',pointBackgroundColor:'#5b9cf5',pointRadius:4,tension:0.3,fill:true}]},
-      options:cfg
+      options:{...cfg,scales:{...cfg.scales,
+        y:{...cfg.scales.y,
+          suggestedMin:Math.min(...hrvVals)-5,
+          suggestedMax:Math.max(...hrvVals)+5}}}
     });
   } else if(hrvEl){
     hrvEl.parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--mut);font-size:13px;">Log ring stats to see HRV trend</div>';
