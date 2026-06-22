@@ -438,51 +438,25 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 </div>
 
 <script>
-// ── UAE TIME (Asia/Dubai, UTC+4, no DST) ──────────────────────────────────────
-const UAE_TZ = 'Asia/Dubai';
-
-function uaeDateStr(){
-  // Returns 'YYYY-MM-DD' in UAE time
-  return new Date().toLocaleDateString('en-CA', {timeZone: UAE_TZ});
+// ── DATE HELPERS — simple local time, phone is in UAE ─────────────────────────
+function dateToYMD(d){
+  // Accepts Date object, YYYY-MM-DD string, or legacy 'Mon Jun 22 2026' string
+  if(!d) return null;
+  if(d instanceof Date){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  if(typeof d==='string'){
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // already YYYY-MM-DD
+    const p=new Date(d); // try parsing legacy format
+    if(!isNaN(p)) return dateToYMD(p);
+  }
+  return null;
 }
-function uaeDay(){
-  // Returns day of week 0=Sun…6=Sat in UAE time
-  return parseInt(new Date().toLocaleDateString('en-US', {timeZone: UAE_TZ, weekday:'numeric'}))||0;
-  // weekday:'numeric' not supported — use date to compute
-}
-function uaeDayOfWeek(){
-  const s = uaeDateStr(); // 'YYYY-MM-DD'
-  const d = new Date(s + 'T00:00:00'); // local midnight
-  return d.getDay();
-}
-function uaeDateKey(dateStr){
-  // dateStr = 'YYYY-MM-DD' → 'Mon Jun 23 2026'
-  const d = new Date(dateStr + 'T00:00:00');
-  const DS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${DS[d.getDay()]} ${MS[d.getMonth()]} ${d.getDate()} ${d.getFullYear()}`;
-}
-function uaeTodayKey(){ return uaeDateKey(uaeDateStr()); }
-function uaeDisplayDate(){
-  return new Date().toLocaleDateString('en-GB', {
-    timeZone: UAE_TZ,
-    weekday:'long', day:'numeric', month:'short'
-  });
-}
-// Offset a date key by N days (for streak row)
-function uaeDateKeyOffset(n){
-  const s=uaeDateStr();
-  const d=new Date(s+'T12:00:00');
-  d.setDate(d.getDate()+n);
-  return uaeDateKey(d.toISOString().slice(0,10));
-}
-function uaeDateFromStr(s){
-  return new Date(s+'T00:00:00');
-}
+function uaeDateFromStr(s){ return new Date(s+'T00:00:00'); }
+function uaeDay(){ return new Date().getDay(); }
 
 function todayStr(){
-  const d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return dateToYMD(new Date());
 }
 const TODAY = todayStr(); // YYYY-MM-DD e.g. '2026-06-22'
 const PROGRAM_START = '2026-06-22'; // YYYY-MM-DD
@@ -515,10 +489,10 @@ const PHASES=[
   {n:4,name:'Overload',    weeks:'Weeks 10–12+',color:'#e05555',desc:'5 sets · Bulgarian split squat · Single-leg RDL · Supersets'},
 ];
 
-function programStarted(){ return uaeDateStr()>=PROGRAM_START; }
+function programStarted(){ return todayStr()>=PROGRAM_START; }
 function weekNum(){
   if(!programStarted()) return 1;
-  const ms=uaeDateFromStr(uaeDateStr())-uaeDateFromStr(PROGRAM_START);
+  const ms=uaeDateFromStr(todayStr())-uaeDateFromStr(PROGRAM_START);
   return Math.floor(ms/(7*24*3600*1000))+1;
 }
 function phase(){
@@ -658,8 +632,37 @@ function getGoals(dt){
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-function loadG(){ try{return JSON.parse(localStorage.getItem('op80_v4')||'null');}catch(e){return null;} }
-function saveG(){ try{localStorage.setItem('op80_v4',JSON.stringify(G));}catch(e){} }
+function dateToYMD(d){
+  if(!d) return null;
+  // Already YYYY-MM-DD
+  if(typeof d==='string'&&d.match(/^\d{4}-\d{2}-\d{2}$/)) return d;
+  // Parse toDateString format e.g. 'Mon Jun 22 2026' or 'Sun Jun 21 2026'
+  const parsed=new Date(d);
+  if(!isNaN(parsed)){
+    return parsed.getFullYear()+'-'+String(parsed.getMonth()+1).padStart(2,'0')+'-'+String(parsed.getDate()).padStart(2,'0');
+  }
+  return d;
+}
+function migrateG(g){
+  if(!g) return g;
+  // Convert all date keys to YYYY-MM-DD
+  if(g.history) g.history=g.history.map(h=>({...h,date:dateToYMD(h.date)||h.date}));
+  if(g.deviations) g.deviations=g.deviations.map(d=>({...d,date:dateToYMD(d.date)||d.date}));
+  if(g.lastDate) g.lastDate=dateToYMD(g.lastDate)||g.lastDate;
+  return g;
+}
+function loadG(){
+  try{
+    // Try v5 first
+    const v5=JSON.parse(localStorage.getItem('op80_v5')||'null');
+    if(v5) return v5;
+    // Migrate from v4
+    const v4=JSON.parse(localStorage.getItem('op80_v4')||'null');
+    if(v4) return migrateG(v4);
+    return null;
+  }catch(e){return null;}
+}
+function saveG(){ try{localStorage.setItem('op80_v5',JSON.stringify(G));}catch(e){} }
 
 let G=loadG()||{
   totalXP:0, streak:0, cleanStreak:0, lastDate:null,
@@ -730,7 +733,7 @@ function init(){
   // Streak
   if(G.lastDate){
     const last=uaeDateFromStr(G.lastDate);
-    const diff=Math.round((uaeDateFromStr(uaeDateStr())-last)/(24*3600*1000));
+    const diff=Math.round((uaeDateFromStr(todayStr())-last)/(24*3600*1000));
     if(diff>1) G.streak=0;
   }
 
@@ -751,9 +754,6 @@ function init(){
 }
 
 // ── STREAK ────────────────────────────────────────────────────────────────────
-function dateToYMD(d){
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
 function renderStreak(){
   const D=['S','M','T','W','T','F','S'];
   const now=new Date(); let html='';
@@ -886,7 +886,7 @@ function saveDay(){
     const d=Math.round((new Date(TODAY+'T00:00:00')-new Date(last+'T00:00:00'))/(24*3600*1000));
     G.streak=d===1?G.streak+1:1;
   } else G.streak=1;
-  G.lastDate=uaeDateStr();
+  G.lastDate=todayStr();
   G.cleanStreak=G.deviations.some(dv=>dv.date===TODAY)?0:(G.cleanStreak||0)+1;
   if(T.goalStates.workout==='done') G.totalWo=(G.totalWo||0)+1;
   checkBadges(); saveState(); renderStreak(); updateXP();
