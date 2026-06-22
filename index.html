@@ -382,6 +382,11 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
     <div class="chart-wrap"><canvas id="hrvChart"></canvas></div>
   </div>
   <div class="chart-card">
+    <div class="chart-title">Resting HR trend</div>
+    <div class="chart-sub">Lower is better — tracks cardiovascular improvement</div>
+    <div class="chart-wrap"><canvas id="rhrChart"></canvas></div>
+  </div>
+  <div class="chart-card">
     <div class="chart-title">Weekly workouts completed</div>
     <div class="chart-sub">Per program week</div>
     <div class="chart-wrap"><canvas id="woChart"></canvas></div>
@@ -1198,21 +1203,25 @@ function renderBadges(){
 }
 
 function renderCharts(){
+  // Sort history by date before rendering
+  G.history.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
   const hist=G.history.filter(h=>h.weight).slice(-14);
-  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Format 'Mon Jun 22 2026' → 'Mon 22'
   function fmtDate(dateKey){
-    // dateKey = 'Mon Jun 23 2026'
-    const p=dateKey.split(' ');
-    return `${p[0]} ${p[2]}`;
+    const p=dateKey.split(' '); // ['Mon','Jun','22','2026']
+    return p.length>=3?`${p[0]} ${p[2]}`:'?';
   }
   const cfg={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
     scales:{x:{ticks:{color:'#7070a0',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
             y:{ticks:{color:'#7070a0',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}};
 
+  // Weight chart
   document.getElementById('wtChartSub').textContent=`Last ${hist.length} days logged`;
   if(charts.wt) charts.wt.destroy();
-  if(hist.length){
-    charts.wt=new Chart(document.getElementById('wtChart').getContext('2d'),{
+  const wtEl=document.getElementById('wtChart');
+  if(hist.length&&wtEl){
+    charts.wt=new Chart(wtEl.getContext('2d'),{
       type:'line',
       data:{labels:hist.map(h=>fmtDate(h.date)),
         datasets:[{data:hist.map(h=>h.weight),borderColor:'#f5c842',borderWidth:2,
@@ -1224,43 +1233,69 @@ function renderCharts(){
     });
   }
 
-  const hervHist=G.history.filter(h=>h.ring?.hrv).slice(-14);
+  // HRV chart
+  const hrvHist=G.history.filter(h=>h.ring?.hrv).slice(-14);
   if(charts.hrv) charts.hrv.destroy();
-  if(hervHist.length){
-    charts.hrv=new Chart(document.getElementById('hrvChart').getContext('2d'),{
+  const hrvEl=document.getElementById('hrvChart');
+  if(hrvHist.length&&hrvEl){
+    charts.hrv=new Chart(hrvEl.getContext('2d'),{
       type:'line',
-      data:{labels:hervHist.map(h=>fmtDate(h.date)),
-        datasets:[{data:hervHist.map(h=>h.ring.hrv),borderColor:'#5b9cf5',borderWidth:2,
+      data:{labels:hrvHist.map(h=>fmtDate(h.date)),
+        datasets:[{data:hrvHist.map(h=>parseFloat(h.ring.hrv)),borderColor:'#5b9cf5',borderWidth:2,
           backgroundColor:'rgba(91,156,245,0.08)',pointBackgroundColor:'#5b9cf5',pointRadius:4,tension:0.3,fill:true}]},
       options:cfg
     });
-  } else {
-    document.getElementById('hrvChart').parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--mut);font-size:13px;">Log ring stats daily to see HRV trend</div>';
+  } else if(hrvEl){
+    hrvEl.parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--mut);font-size:13px;">Log ring stats to see HRV trend</div>';
   }
 
-  // Weekly workout bar
+  // RHR chart
+  const rhrHist=G.history.filter(h=>h.ring?.rhr).slice(-14);
+  if(charts.rhr) charts.rhr.destroy();
+  const rhrEl=document.getElementById('rhrChart');
+  if(rhrHist.length&&rhrEl){
+    const rhrAvg=rhrHist.reduce((a,h)=>a+parseFloat(h.ring.rhr),0)/rhrHist.length;
+    charts.rhr=new Chart(rhrEl.getContext('2d'),{
+      type:'line',
+      data:{labels:rhrHist.map(h=>fmtDate(h.date)),
+        datasets:[
+          {data:rhrHist.map(h=>parseFloat(h.ring.rhr)),borderColor:'#e05555',borderWidth:2,
+            backgroundColor:'rgba(224,85,85,0.08)',pointBackgroundColor:'#e05555',pointRadius:4,tension:0.3,fill:true,label:'Resting HR'},
+          {data:rhrHist.map(()=>Math.round(rhrAvg)),borderColor:'rgba(224,85,85,0.3)',borderWidth:1,
+            borderDash:[4,4],pointRadius:0,label:`Avg ${Math.round(rhrAvg)} bpm`},
+        ]},
+      options:{...cfg,plugins:{legend:{display:true,labels:{color:'#7070a0',font:{size:10},boxWidth:12}}},
+        scales:{...cfg.scales,y:{...cfg.scales.y,
+          suggestedMin:Math.min(...rhrHist.map(h=>parseFloat(h.ring.rhr)))-3,
+          suggestedMax:Math.max(...rhrHist.map(h=>parseFloat(h.ring.rhr)))+3}}}
+    });
+  } else if(rhrEl){
+    rhrEl.parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--mut);font-size:13px;">Log resting HR daily to see trend</div>';
+  }
+
+  // Weekly workout bar — use date objects for reliable week calc
+  const progStart=uaeDateFromStr(PROGRAM_START);
+  const msPerWk=7*24*3600*1000;
   const wkMap={};
   G.history.forEach(h=>{
     if(!h.date) return;
-    const d=uaeDateFromStr(uaeDateStr()); // today
-    const hd=new Date(h.date); // approximate
-    const msPerWk=7*24*3600*1000;
-    const hDate=uaeDateFromStr(PROGRAM_START);
-    const wk=Math.max(1,Math.floor((new Date(h.date.replace(/(\w+) (\w+) (\d+) (\d+)/,'$3 $2 $4'))-hDate)/msPerWk)+1);
-    const key=`Wk ${wk}`;
+    const hd=new Date(h.date); // toDateString format parses fine
+    const wkNum=Math.max(1,Math.floor((hd-progStart)/msPerWk)+1);
+    const key=`Wk ${wkNum}`;
     if(!wkMap[key]) wkMap[key]=0;
     if(h.goalStates?.workout==='done'||h.goalStates?.badminton==='done') wkMap[key]++;
   });
   const wkL=Object.keys(wkMap).slice(-8), wkD=wkL.map(k=>wkMap[k]);
   if(charts.wo) charts.wo.destroy();
-  if(wkL.length){
-    charts.wo=new Chart(document.getElementById('woChart').getContext('2d'),{
+  const woEl=document.getElementById('woChart');
+  if(wkL.length&&woEl){
+    charts.wo=new Chart(woEl.getContext('2d'),{
       type:'bar',
       data:{labels:wkL,datasets:[{data:wkD,backgroundColor:'rgba(78,203,113,0.6)',borderColor:'#4ecb71',borderWidth:1,borderRadius:4}]},
       options:{...cfg,scales:{...cfg.scales,y:{...cfg.scales.y,min:0,ticks:{...cfg.scales.y.ticks,stepSize:1}}}}
     });
-  } else {
-    document.getElementById('woChart').parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--mut);font-size:13px;">Complete workouts to see weekly history</div>';
+  } else if(woEl){
+    woEl.parentElement.innerHTML='<div style="text-align:center;padding:40px;color:var(--mut);font-size:13px;">Complete workouts to see weekly history</div>';
   }
 }
 
@@ -1317,17 +1352,19 @@ function renderDevLog(){
 
 // ── PAST DAY ──────────────────────────────────────────────────────────────────
 function savePastDay(){
-  const dateStr=document.getElementById('pastDate').value;
+  const dateStr=document.getElementById('pastDate').value; // YYYY-MM-DD
   if(!dateStr){toast('Pick a date first');return;}
-  const dateKey=uaeDateKey(uaeDateFromStr(dateStr));
+  // Parse YYYY-MM-DD directly into local date
+  const [y,m,d]=dateStr.split('-').map(Number);
+  const dateObj=new Date(y,m-1,d);
+  const dateKey=dateObj.toDateString(); // e.g. "Sun Jun 21 2026"
   if(dateKey===TODAY){toast("That's today — use the Today tab");return;}
   const wt=parseFloat(document.getElementById('pastWt').value);
   const rec=document.getElementById('pastRec').value;
   const hrv=document.getElementById('pastHrv').value;
   const slp=document.getElementById('pastSlp').value;
   const pills=[...document.querySelectorAll('#pastPills .dpill.sel')].map(p=>p.dataset.v);
-  const gs={};
-  pills.forEach(p=>gs[p]='done');
+  const gs={}; pills.forEach(p=>gs[p]='done');
   let xp=0;
   if(!isNaN(wt)) xp+=10;
   if(gs.workout) xp+=50; if(gs.walk) xp+=30; if(gs.badminton) xp+=40;
@@ -1335,6 +1372,8 @@ function savePastDay(){
   const r={date:dateKey,weight:isNaN(wt)?null:wt,ring:{recovery:rec,hrv,sleep:slp},goalStates:gs,xp,snacks:[],supps:{},saved:true};
   const idx=G.history.findIndex(h=>h.date===dateKey);
   if(idx>=0) G.history[idx]=r; else G.history.push(r);
+  // Sort history by date ascending
+  G.history.sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(!isNaN(wt)&&wt<G.lowestWt) G.lowestWt=wt;
   G.totalXP+=xp; saveG();
   document.getElementById('pastDate').value='';
@@ -1343,7 +1382,7 @@ function savePastDay(){
   document.getElementById('pastHrv').value='';
   document.getElementById('pastSlp').value='';
   document.querySelectorAll('#pastPills .dpill').forEach(p=>p.classList.remove('sel'));
-  renderCharts(); toast(`Past day saved · +${xp} XP`,true);
+  renderCharts(); toast(`${dateKey} saved · +${xp} XP`,true);
 }
 
 // ── PAGE NAV ──────────────────────────────────────────────────────────────────
