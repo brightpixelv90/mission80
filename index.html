@@ -303,7 +303,15 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
   <div class="calwrap">
     <div class="calh"><div><span class="caln" id="calN">0</span> <span style="font-size:13px;color:var(--mu)">kcal logged</span></div><div class="calt">target 2,100</div></div>
     <div class="calbar"><div class="calf" id="calF" style="width:0%"></div></div>
-    <div class="calf2"><span id="calL">2,100 remaining</span><span id="protL">Protein: 0g / 160g</span></div>
+    <div class="calf2"><span id="calL">2,100 remaining</span><span id="protL">Protein: 0g / 145g</span></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="cl" style="margin-bottom:7px">Total calories burned today (from Gabit)</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <input type="number" id="totalBurned" placeholder="e.g. 2650" style="flex:1;background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:18px;font-weight:700;outline:none" oninput="updDeficit()">
+      <span style="font-size:12px;color:var(--mu)">kcal burned</span>
+    </div>
+    <div id="deficitDisp" style="font-size:13px;color:var(--mu);padding-top:8px;border-top:1px solid var(--b1)">Enter total burned to see your real deficit</div>
   </div>
   <div class="slbl">Log food</div>
   <div style="font-size:12px;color:var(--mu);margin-bottom:9px">Enter quantity + unit + food name — AI estimates calories</div>
@@ -317,7 +325,6 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
     <input type="text" class="sni snf" id="snFood" placeholder="e.g. pulao, mutton..." onkeydown="if(event.key==='Enter')logSnack()">
   </div>
   <button class="snadd" id="snBtn" onclick="logSnack()">+ Add to log</button>
-  <div class="aith" id="aiTh">🤖 Estimating...</div>
   <div id="snLog"></div>
   <div class="slbl">Today's guide</div>
   <div id="mealG"></div>
@@ -802,24 +809,8 @@ async function logSnack(){
   const unit=document.getElementById('snUnit').value;
   const food=document.getElementById('snFood').value.trim();
   if(!food){toast('What did you eat?');return;}
-  const desc=qty+' '+unit+' of '+food;
-  const btn=document.getElementById('snBtn'),th=document.getElementById('aiTh');
-  btn.disabled=true; th.style.display='block';
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:80,
-        system:'Nutrition estimator for Indian/Middle Eastern food. Return ONLY valid JSON, no markdown: {"name":"display name max 6 words","kcal":integer,"protein":integer}. Scale by quantity. 1 bowl pulao=320kcal, 1 piece mutton=220kcal, 1 bowl dal=180kcal, 6 chicken drumsticks=510kcal.',
-        messages:[{role:'user',content:desc}]})
-    });
-    const dat=await res.json();
-    const p=JSON.parse(dat.content?.[0]?.text||'{}');
-    addSnack(p.name||desc, p.kcal||100, p.protein||0);
-  }catch(e){
-    const f=fuzz(food,parseFloat(qty)||1,unit);
-    addSnack(f.n, f.k, f.p);
-  }
-  btn.disabled=false; th.style.display='none';
+  const f=fuzz(food,parseFloat(qty)||1,unit);
+  addSnack(f.n, f.k, f.p);
   document.getElementById('snFood').value='';
   document.getElementById('snQty').value='';
 }
@@ -886,15 +877,36 @@ function updCal(){
   const pct=Math.min((tot/2100)*100,105);
   document.getElementById('calN').textContent=tot.toLocaleString();
   document.getElementById('calL').textContent=tot<2100?(2100-tot).toLocaleString()+' remaining':'Target reached';
-  document.getElementById('protL').textContent='Protein: ~'+pro+'g / 160g';
+  document.getElementById('protL').textContent='Protein: ~'+pro+'g / 145g';
   const f=document.getElementById('calF');
   f.style.width=pct+'%';
   f.className='calf'+(tot>2200?' over':tot>1900?' warn':'');
 }
 
+function updDeficit(){
+  const burned=parseFloat(document.getElementById('totalBurned').value);
+  const eaten=T.snacks.reduce((a,s)=>a+s.kcal,0);
+  const el=document.getElementById('deficitDisp');
+  if(isNaN(burned)||burned===0){el.textContent='Enter total burned to see your real deficit';el.style.color='var(--mu)';return;}
+  T.totalBurned=burned; persist();
+  const deficit=burned-eaten;
+  const wkLoss=((deficit*7)/7700).toFixed(2);
+  if(deficit>0){
+    el.innerHTML=`<span style="color:var(--gr);font-weight:700">↓ ${deficit.toLocaleString()} kcal deficit</span> · ~${wkLoss} kg/week loss pace`;
+    el.style.color='';
+  } else {
+    el.innerHTML=`<span style="color:var(--re);font-weight:700">↑ ${Math.abs(deficit).toLocaleString()} kcal surplus</span> · reduce intake or increase activity`;
+    el.style.color='';
+  }
+}
+
 // ── NUTRITION PAGE ─────────────────────────────────────────────────────────────
 function renderNutrition(){
   renderSnacks(); updCal();
+  if(T.totalBurned){
+    document.getElementById('totalBurned').value=T.totalBurned;
+    updDeficit();
+  }
   const isWE = !started() || DOW===0||DOW===5||DOW===6;
   document.getElementById('mealG').innerHTML = isWE
     ? `<div class="devcard" style="background:var(--amd);border-color:rgba(245,158,66,.25)">
