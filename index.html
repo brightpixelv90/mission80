@@ -475,7 +475,7 @@ function uaeDateFromStr(s){
   return new Date(s+'T00:00:00');
 }
 
-const TODAY = uaeTodayKey();
+const TODAY = new Date().toDateString();
 const PROGRAM_START = '2026-06-22'; // YYYY-MM-DD
 
 // ── LEVELS & BADGES ───────────────────────────────────────────────────────────
@@ -707,10 +707,10 @@ function updateXP(){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 function init(){
-  const now=uaeNow();
+  const now=new Date();
   const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('hDate').textContent=`${DAYS[now.getUTCDay()]}, ${now.getUTCDate()} ${MONTHS[now.getUTCMonth()]} · Dubai`;
+  document.getElementById('hDate').textContent=`${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]} · Dubai`;
   document.getElementById('hTitle').textContent=`Day ${G.history.length+1}`;
 
   // Streak
@@ -739,16 +739,17 @@ function init(){
 // ── STREAK ────────────────────────────────────────────────────────────────────
 function renderStreak(){
   const D=['M','T','W','T','F','S','S'];
-  const now=uaeNow(); let html='';
+  const now=new Date(); let html='';
   for(let i=0;i<7;i++){
-    const d=new Date(now.getTime()); d.setUTCDate(now.getUTCDate()-6+i);
-    const key=uaeDateKey(d); const isToday=key===TODAY;
+    const d=new Date(now);
+    d.setDate(now.getDate()-6+i);
+    const key=d.toDateString(); const isToday=key===TODAY;
     const rec=G.history.find(h=>h.date===key);
     let cls='',icon='';
     if(isToday){cls='today';icon='⚡';}
     else if(rec?.saved){cls='done';icon='✓';}
     else if(d<now){cls='missed';icon='×';}
-    html+=`<div class="sday"><div class="sdot ${cls}">${icon}</div><div class="slbl">${D[d.getUTCDay()]}</div></div>`;
+    html+=`<div class="sday"><div class="sdot ${cls}">${icon}</div><div class="slbl">${D[d.getDay()]}</div></div>`;
   }
   document.getElementById('streakRow').innerHTML=html;
 }
