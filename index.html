@@ -263,12 +263,23 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
   <div class="slbl">Gabit ring — enter tonight from app</div>
   <div class="rgrid">
     <div class="rc feat"><div class="rc-l">Recovery score</div><input type="number" id="r_rec" placeholder="—" min="0" max="100" oninput="updRec()"><div class="rc-h" id="recH">Enter your recovery score</div></div>
-    <div class="rc"><div class="rc-l">Resting HR</div><input type="number" id="r_rhr" placeholder="—"><div class="rc-u">bpm</div></div>
-    <div class="rc"><div class="rc-l">HRV</div><input type="number" id="r_hrv" placeholder="—"><div class="rc-u">ms</div></div>
     <div class="rc"><div class="rc-l">Sleep score</div><input type="number" id="r_slp" placeholder="—"><div class="rc-u">/ 100</div></div>
-    <div class="rc"><div class="rc-l">Stress</div><input type="number" id="r_str" placeholder="—"><div class="rc-u">/ 100</div></div>
     <div class="rc"><div class="rc-l">Steps</div><input type="number" id="r_stp" placeholder="—"><div class="rc-u">today</div></div>
     <div class="rc"><div class="rc-l">Active kcal</div><input type="number" id="r_cal" placeholder="—"><div class="rc-u">burned</div></div>
+    <div class="rc"><div class="rc-l">Stress</div><input type="number" id="r_str" placeholder="—"><div class="rc-u">/ 100</div></div>
+    <div class="rc"><div class="rc-l">Resting HR</div><input type="number" id="r_rhr" placeholder="—"><div class="rc-u">bpm</div></div>
+    <div class="rc"><div class="rc-l">HRV</div><input type="number" id="r_hrv" placeholder="—"><div class="rc-u">ms</div></div>
+  </div>
+
+  <div class="slbl">Food score &amp; calorie balance — enter from Gabit</div>
+  <div class="rgrid" style="grid-template-columns:1fr 1fr">
+    <div class="rc"><div class="rc-l">Food score</div><input type="number" id="r_fsc" placeholder="—" min="0" max="100"><div class="rc-u">/ 100</div></div>
+    <div class="rc"><div class="rc-l">Calories eaten</div><input type="number" id="r_kcalE" placeholder="—" oninput="updDeficit()"><div class="rc-u">kcal in</div></div>
+    <div class="rc"><div class="rc-l">Protein</div><input type="number" id="r_prot" placeholder="—"><div class="rc-u">g</div></div>
+    <div class="rc"><div class="rc-l">Calories burned</div><input type="number" id="r_kcalB" placeholder="—" oninput="updDeficit()"><div class="rc-u">kcal out</div></div>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div id="deficitDisp" style="font-size:13px;color:var(--mu)">Enter calories eaten + burned to see today's deficit</div>
   </div>
 
   <div class="slbl">Today's goals</div>
@@ -302,44 +313,11 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 <!-- NUTRITION -->
 <div class="page" id="pg-nutrition">
   <div class="calwrap">
-    <div class="calh"><div><span class="caln" id="calN">0</span> <span style="font-size:13px;color:var(--mu)">kcal logged</span></div><div class="calt">target 2,100</div></div>
+    <div class="calh"><div><span class="caln" id="calN">0</span> <span style="font-size:13px;color:var(--mu)">kcal eaten today</span></div><div class="calt">target 2,100</div></div>
     <div class="calbar"><div class="calf" id="calF" style="width:0%"></div></div>
     <div class="calf2"><span id="calL">2,100 remaining</span><span id="protL">Protein: 0g / 145g</span></div>
   </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="cl" style="margin-bottom:7px">Total calories burned today (from Gabit)</div>
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-      <input type="number" id="totalBurned" placeholder="e.g. 2650" style="flex:1;background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:18px;font-weight:700;outline:none" oninput="updDeficit()">
-      <span style="font-size:12px;color:var(--mu)">kcal burned</span>
-    </div>
-    <div id="deficitDisp" style="font-size:13px;color:var(--mu);padding-top:8px;border-top:1px solid var(--b1)">Enter total burned to see your real deficit</div>
-  </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="cl" style="margin-bottom:4px">Sync from Gabit</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:9px">Paste today's totals from the Gabit app — more accurate than AI-estimated entries</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <input type="number" id="gbKcal" placeholder="Calories (kcal)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
-      <input type="number" id="gbProt" placeholder="Protein (g)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
-      <input type="number" id="gbFat" placeholder="Fat (g)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
-      <input type="number" id="gbCarb" placeholder="Carbs (g)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
-    </div>
-    <button class="snadd" onclick="syncGabit()">Save Gabit totals</button>
-    <div id="gbSummary" style="font-size:12px;color:var(--mu);margin-top:8px"></div>
-  </div>
-  <div class="slbl">Log food</div>
-  <div style="font-size:12px;color:var(--mu);margin-bottom:9px">Enter quantity + unit + food name — AI estimates calories</div>
-  <div style="font-size:11px;color:var(--mu);margin-bottom:9px">Use this only for items not yet in Gabit — it's a rough estimate, not a replacement for Gabit's log</div>
-  <div class="snrow">
-    <input type="number" class="sni snq" id="snQty" placeholder="Qty" step="0.5" min="0.5">
-    <select class="sni snu" id="snUnit">
-      <option>serving</option><option>piece(s)</option><option>bowl</option><option>plate</option>
-      <option>cup</option><option>glass</option><option>handful</option><option>tbsp</option>
-      <option>g</option><option>ml</option><option>slice</option>
-    </select>
-    <input type="text" class="sni snf" id="snFood" placeholder="e.g. pulao, mutton..." onkeydown="if(event.key==='Enter')logSnack()">
-  </div>
-  <button class="snadd" id="snBtn" onclick="logSnack()">+ Add to log</button>
-  <div id="snLog"></div>
+  <div class="info" style="margin-bottom:14px">This is a recap only — enter today's numbers on the Today tab, right under your Gabit ring stats.</div>
   <div class="slbl">Today's guide</div>
   <div id="mealG"></div>
 </div>
@@ -358,6 +336,15 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 
   <div class="slbl">Badges</div>
   <div class="bdgrid" id="bdgrid"></div>
+
+  <div class="chcard">
+    <div class="chtt">Calorie balance</div>
+    <div class="chst" id="calBalSub">Enter calories eaten + burned on the Today tab</div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px">
+      <div><div style="font-size:11px;color:var(--mu)">Today</div><div style="font-size:17px;font-weight:700" id="calBalToday">—</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:var(--mu)">7-day avg pace</div><div style="font-size:17px;font-weight:700" id="calBalWeek">—</div></div>
+    </div>
+  </div>
 
   <div class="chcard"><div class="chtt">Weight trend</div><div class="chst" id="wtSub">No data yet</div><div class="chwrap"><canvas id="wtChart"></canvas></div></div>
   <div class="chcard"><div class="chtt">HRV trend</div><div class="chst">Recovery quality over time</div><div class="chwrap"><canvas id="hrvChart"></canvas></div></div>
@@ -594,7 +581,7 @@ if(!G.animalCutsStart){ G.animalCutsStart = '2026-07-06'; saveG(); }
 
 // Today's record (always YYYY-MM-DD keyed)
 const _ex = G.history.find(h=>h.date===TODAY) || {};
-let T = {date:TODAY, wt:null, ring:{}, gs:{}, xp:0, snacks:[], supps:{}, saved:false, ..._ex};
+let T = {date:TODAY, wt:null, ring:{}, gs:{}, xp:0, snacks:[], nutr:{}, supps:{}, saved:false, ..._ex};
 T.ring   = T.ring   || {};
 T.gs     = T.gs     || T.goalStates || {};
 T.snacks = T.snacks || [];
@@ -676,7 +663,7 @@ function init(){
     if(diff>1) G.streak=0;
   }
   updXP(); renderStreak(); renderGoals(); renderSupps(); renderWorkout();
-  restoreRing(); updWtDisp();
+  restoreRing(); restoreNutr(); updWtDisp();
   if(T.wt) document.getElementById('wtIn').value=T.wt;
 }
 
@@ -794,6 +781,12 @@ function saveDay(){
     steps:document.getElementById('r_stp').value||null,
     cals:document.getElementById('r_cal').value||null,
   };
+  T.nutr={
+    foodScore:document.getElementById('r_fsc').value||null,
+    kcalEaten:document.getElementById('r_kcalE').value||null,
+    protein:document.getElementById('r_prot').value||null,
+    kcalBurned:document.getElementById('r_kcalB').value||null,
+  };
   T.saved=true;
   const prevLv=getLv(G.totalXP-T.xp).i, newLv=getLv(G.totalXP).i;
   if(G.lastDate){
@@ -822,133 +815,44 @@ function checkBadges(){
   BADGES.forEach(b=>{if(!G.badges.includes(b.id)&&b.f(G)){G.badges.push(b.id);toast('🏅 Badge: '+b.n+'!',true);}});
 }
 
-// ── SNACK ─────────────────────────────────────────────────────────────────────
-async function logSnack(){
-  const qty=document.getElementById('snQty').value||'1';
-  const unit=document.getElementById('snUnit').value;
-  const food=document.getElementById('snFood').value.trim();
-  if(!food){toast('What did you eat?');return;}
-  const f=fuzz(food,parseFloat(qty)||1,unit);
-  addSnack(f.n, f.k, f.p);
-  document.getElementById('snFood').value='';
-  document.getElementById('snQty').value='';
-}
-function fuzz(t,qty,unit){
-  t=t.toLowerCase();
-  const um={serving:1,piece:1,'piece(s)':1,bowl:1.2,plate:1.5,cup:.8,glass:.8,handful:.5,tbsp:.15,g:.004,ml:.001,slice:.6};
-  const m=qty*(um[unit]||1);
-  const R=[
-    {kw:['pulao','pilaf'],       k:320,p:6, n:'Pulao'},
-    {kw:['biryani'],             k:380,p:14,n:'Biryani'},
-    {kw:['mutton','lamb'],       k:220,p:18,n:'Mutton'},
-    {kw:['chicken drumstick'],   k:85, p:8, n:'Chicken drumstick'},
-    {kw:['chicken breast'],      k:165,p:31,n:'Chicken breast'},
-    {kw:['chicken'],             k:150,p:20,n:'Chicken'},
-    {kw:['channa dal','chana dal','dal'],k:160,p:9,n:'Dal'},
-    {kw:['rajma'],               k:180,p:9, n:'Rajma'},
-    {kw:['paneer'],              k:265,p:18,n:'Paneer'},
-    {kw:['roti','chapati'],      k:120,p:3, n:'Roti'},
-    {kw:['paratha'],             k:200,p:4, n:'Paratha'},
-    {kw:['naan'],                k:260,p:9, n:'Naan'},
-    {kw:['rice','chawal'],       k:200,p:4, n:'Rice'},
-    {kw:['samosa'],              k:150,p:3, n:'Samosa'},
-    {kw:['pakora','pakoda'],     k:90, p:2, n:'Pakora'},
-    {kw:['kebab','seekh'],       k:150,p:12,n:'Kebab'},
-    {kw:['cashew','kaju'],       k:160,p:5, n:'Cashews'},
-    {kw:['almond','badam'],      k:130,p:5, n:'Almonds'},
-    {kw:['peanut'],              k:140,p:6, n:'Peanuts'},
-    {kw:['date','khajoor'],      k:65, p:0, n:'Dates'},
-    {kw:['biscuit','cookie'],    k:70, p:1, n:'Biscuit'},
-    {kw:['chai','tea'],          k:70, p:2, n:'Chai'},
-    {kw:['coffee'],              k:15, p:0, n:'Coffee'},
-    {kw:['milk'],                k:120,p:6, n:'Milk'},
-    {kw:['yogurt','curd','dahi'],k:80, p:10,n:'Yogurt'},
-    {kw:['egg','anda'],          k:75, p:6, n:'Egg'},
-    {kw:['banana'],              k:90, p:1, n:'Banana'},
-    {kw:['apple'],               k:80, p:0, n:'Apple'},
-    {kw:['chocolate'],           k:150,p:2, n:'Chocolate'},
-    {kw:['chips'],               k:170,p:2, n:'Chips'},
-    {kw:['shawarma'],            k:400,p:20,n:'Shawarma'},
-    {kw:['hummus'],              k:100,p:5, n:'Hummus'},
-    {kw:['inc max shred','inc shred max','max shred','shred max'],k:120,p:20,n:'INC Max Shred'},
-    {kw:['whey','protein powder'],k:120,p:25,n:'Whey protein'},
-    {kw:['greek yogurt'],        k:80, p:10,n:'Greek yogurt'},
-  ];
-  for(const r of R) if(r.kw.some(k=>t.includes(k))) return{n:qty+' '+unit+' '+r.n,k:Math.round(r.k*m),p:Math.round(r.p*m)};
-  return{n:qty+' '+unit+' '+t.slice(0,25),k:Math.round(150*m),p:0};
-}
-function syncGabit(){
-  const kcal=parseFloat(document.getElementById('gbKcal').value);
-  const prot=parseFloat(document.getElementById('gbProt').value)||0;
-  const fat=parseFloat(document.getElementById('gbFat').value)||0;
-  const carb=parseFloat(document.getElementById('gbCarb').value)||0;
-  if(isNaN(kcal)||kcal<=0){ toast('Enter calories from Gabit first'); return; }
-  // Remove any non-Gabit manual snacks so we don't double-count once Gabit's total is in
-  T.snacks = T.snacks.filter(s=>s.id!=='gabit-total');
-  T.snacks.push({name:'Gabit daily total',kcal:Math.round(kcal),protein:Math.round(prot),id:'gabit-total'});
-  T.gabitFat=fat; T.gabitCarb=carb;
-  persist(); renderSnacks(); updCal();
-  document.getElementById('gbSummary').textContent=`Synced: ${Math.round(kcal)} kcal · ${Math.round(prot)}g protein · ${fat}g fat · ${carb}g carbs`;
-  toast('Gabit totals saved ✓',true);
-}
-function addSnack(name,kcal,protein){
-  T.snacks.push({name,kcal,protein,id:Date.now()});
-  persist(); renderSnacks(); updCal();
-  toast('+'+kcal+' kcal logged');
-}
-function rmSnack(id){
-  T.snacks=T.snacks.filter(s=>s.id!==id);
-  persist(); renderSnacks(); updCal();
-}
-function renderSnacks(){
-  const el=document.getElementById('snLog');
-  if(!T.snacks.length){el.innerHTML='';return;}
-  el.innerHTML=T.snacks.map(s=>`<div class="sne"><div class="se-n">${s.name}</div><div class="se-k">${s.kcal} kcal</div><div class="se-r" onclick="rmSnack(${s.id})">×</div></div>`).join('');
-}
+// ── NUTRITION (direct entry from Gabit) ────────────────────────────────────────
 function updCal(){
-  const tot=T.snacks.reduce((a,s)=>a+s.kcal,0);
-  const pro=T.snacks.reduce((a,s)=>a+(s.protein||0),0);
-  const pct=Math.min((tot/2100)*100,105);
-  document.getElementById('calN').textContent=tot.toLocaleString();
-  document.getElementById('calL').textContent=tot<2100?(2100-tot).toLocaleString()+' remaining':'Target reached';
-  document.getElementById('protL').textContent='Protein: ~'+pro+'g / 145g';
+  const kcal=parseFloat(document.getElementById('r_kcalE').value)||0;
+  const prot=parseFloat(document.getElementById('r_prot').value)||0;
+  const pct=Math.min((kcal/2100)*100,105);
+  document.getElementById('calN').textContent=kcal.toLocaleString();
+  document.getElementById('calL').textContent=kcal<2100?(2100-kcal).toLocaleString()+' remaining':'Target reached';
+  document.getElementById('protL').textContent='Protein: ~'+prot+'g / 145g';
   const f=document.getElementById('calF');
   f.style.width=pct+'%';
-  f.className='calf'+(tot>2200?' over':tot>1900?' warn':'');
+  f.className='calf'+(kcal>2200?' over':kcal>1900?' warn':'');
 }
 
 function updDeficit(){
-  const burned=parseFloat(document.getElementById('totalBurned').value);
-  const eaten=T.snacks.reduce((a,s)=>a+s.kcal,0);
+  const eaten=parseFloat(document.getElementById('r_kcalE').value);
+  const burned=parseFloat(document.getElementById('r_kcalB').value);
   const el=document.getElementById('deficitDisp');
-  if(isNaN(burned)||burned===0){el.textContent='Enter total burned to see your real deficit';el.style.color='var(--mu)';return;}
-  T.totalBurned=burned; persist();
+  updCal();
+  if(isNaN(burned)||burned===0||isNaN(eaten)){el.textContent='Enter calories eaten + burned to see today\'s deficit';el.style.color='var(--mu)';return;}
   const deficit=burned-eaten;
   const wkLoss=((deficit*7)/7700).toFixed(2);
   if(deficit>0){
     el.innerHTML=`<span style="color:var(--gr);font-weight:700">↓ ${deficit.toLocaleString()} kcal deficit</span> · ~${wkLoss} kg/week loss pace`;
-    el.style.color='';
   } else {
     el.innerHTML=`<span style="color:var(--re);font-weight:700">↑ ${Math.abs(deficit).toLocaleString()} kcal surplus</span> · reduce intake or increase activity`;
-    el.style.color='';
   }
+}
+
+function restoreNutr(){
+  const n=T.nutr||{};
+  const m={r_fsc:'foodScore',r_kcalE:'kcalEaten',r_prot:'protein',r_kcalB:'kcalBurned'};
+  Object.entries(m).forEach(([id,k])=>{if(n[k]!=null)document.getElementById(id).value=n[k];});
+  updDeficit();
 }
 
 // ── NUTRITION PAGE ─────────────────────────────────────────────────────────────
 function renderNutrition(){
-  renderSnacks(); updCal();
-  if(T.totalBurned){
-    document.getElementById('totalBurned').value=T.totalBurned;
-    updDeficit();
-  }
-  const gabitEntry = T.snacks.find(s=>s.id==='gabit-total');
-  if(gabitEntry){
-    document.getElementById('gbKcal').value=gabitEntry.kcal;
-    document.getElementById('gbProt').value=gabitEntry.protein;
-    document.getElementById('gbFat').value=T.gabitFat||'';
-    document.getElementById('gbCarb').value=T.gabitCarb||'';
-    document.getElementById('gbSummary').textContent=`Synced: ${gabitEntry.kcal} kcal · ${gabitEntry.protein}g protein · ${T.gabitFat||0}g fat · ${T.gabitCarb||0}g carbs`;
-  }
+  updCal();
   const isWE = !started() || DOW===0||DOW===5||DOW===6;
   document.getElementById('mealG').innerHTML = isWE
     ? `<div class="devcard" style="background:var(--amd);border-color:rgba(245,158,66,.25)">
@@ -1054,7 +958,37 @@ function renderProgress(){
   document.getElementById('pgT').textContent=lost+' kg lost';
   document.getElementById('pgP').textContent=pct+'% complete';
   document.getElementById('pgB').style.width=pct+'%';
-  renderBadges(); renderCharts(); renderPhases(); renderMilestones(); renderDevLog();
+  renderBadges(); renderCharts(); renderPhases(); renderMilestones(); renderDevLog(); renderCalBalance();
+}
+function renderCalBalance(){
+  const hist=[...G.history];
+  const ti=hist.findIndex(h=>h.date===TODAY);
+  const live={...T,nutr:T.nutr};
+  if(ti>=0) hist[ti]={...hist[ti],nutr:T.nutr}; else if(T.nutr&&(T.nutr.kcalEaten||T.nutr.kcalBurned)) hist.push(live);
+  hist.sort((a,b)=>parseYMD(a.date)-parseYMD(b.date));
+
+  const eatenT=parseFloat(document.getElementById('r_kcalE')?.value);
+  const burnedT=parseFloat(document.getElementById('r_kcalB')?.value);
+  const todayEl=document.getElementById('calBalToday');
+  if(!isNaN(eatenT)&&!isNaN(burnedT)&&burnedT>0){
+    const d=burnedT-eatenT;
+    todayEl.textContent=(d>=0?'↓':'↑')+Math.abs(Math.round(d)).toLocaleString()+' kcal';
+    todayEl.style.color=d>=0?'var(--gr)':'var(--re)';
+  } else { todayEl.textContent='—'; todayEl.style.color='var(--tx)'; }
+
+  const last7=hist.filter(h=>h.nutr&&h.nutr.kcalEaten&&h.nutr.kcalBurned&&h.date).slice(-7);
+  const weekEl=document.getElementById('calBalWeek');
+  const subEl=document.getElementById('calBalSub');
+  if(last7.length){
+    const avgDeficit=last7.reduce((a,h)=>a+(parseFloat(h.nutr.kcalBurned)-parseFloat(h.nutr.kcalEaten)),0)/last7.length;
+    const pace=((avgDeficit*7)/7700).toFixed(2);
+    weekEl.textContent=(avgDeficit>=0?'-':'+')+Math.abs(pace)+' kg/wk';
+    weekEl.style.color=avgDeficit>=0?'var(--gr)':'var(--re)';
+    subEl.textContent=`Based on ${last7.length} day${last7.length>1?'s':''} of logged calorie balance`;
+  } else {
+    weekEl.textContent='—'; weekEl.style.color='var(--tx)';
+    subEl.textContent='Enter calories eaten + burned on the Today tab';
+  }
 }
 function renderBadges(){
   document.getElementById('bdgrid').innerHTML=BADGES.map(b=>{
