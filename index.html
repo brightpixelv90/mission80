@@ -314,8 +314,21 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
     </div>
     <div id="deficitDisp" style="font-size:13px;color:var(--mu);padding-top:8px;border-top:1px solid var(--b1)">Enter total burned to see your real deficit</div>
   </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="cl" style="margin-bottom:4px">Sync from Gabit</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:9px">Paste today's totals from the Gabit app — more accurate than AI-estimated entries</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <input type="number" id="gbKcal" placeholder="Calories (kcal)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
+      <input type="number" id="gbProt" placeholder="Protein (g)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
+      <input type="number" id="gbFat" placeholder="Fat (g)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
+      <input type="number" id="gbCarb" placeholder="Carbs (g)" style="background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--r);padding:10px 12px;color:var(--tx);font-size:15px;outline:none">
+    </div>
+    <button class="snadd" onclick="syncGabit()">Save Gabit totals</button>
+    <div id="gbSummary" style="font-size:12px;color:var(--mu);margin-top:8px"></div>
+  </div>
   <div class="slbl">Log food</div>
   <div style="font-size:12px;color:var(--mu);margin-bottom:9px">Enter quantity + unit + food name — AI estimates calories</div>
+  <div style="font-size:11px;color:var(--mu);margin-bottom:9px">Use this only for items not yet in Gabit — it's a rough estimate, not a replacement for Gabit's log</div>
   <div class="snrow">
     <input type="number" class="sni snq" id="snQty" placeholder="Qty" step="0.5" min="0.5">
     <select class="sni snu" id="snUnit">
@@ -864,6 +877,20 @@ function fuzz(t,qty,unit){
   for(const r of R) if(r.kw.some(k=>t.includes(k))) return{n:qty+' '+unit+' '+r.n,k:Math.round(r.k*m),p:Math.round(r.p*m)};
   return{n:qty+' '+unit+' '+t.slice(0,25),k:Math.round(150*m),p:0};
 }
+function syncGabit(){
+  const kcal=parseFloat(document.getElementById('gbKcal').value);
+  const prot=parseFloat(document.getElementById('gbProt').value)||0;
+  const fat=parseFloat(document.getElementById('gbFat').value)||0;
+  const carb=parseFloat(document.getElementById('gbCarb').value)||0;
+  if(isNaN(kcal)||kcal<=0){ toast('Enter calories from Gabit first'); return; }
+  // Remove any non-Gabit manual snacks so we don't double-count once Gabit's total is in
+  T.snacks = T.snacks.filter(s=>s.id!=='gabit-total');
+  T.snacks.push({name:'Gabit daily total',kcal:Math.round(kcal),protein:Math.round(prot),id:'gabit-total'});
+  T.gabitFat=fat; T.gabitCarb=carb;
+  persist(); renderSnacks(); updCal();
+  document.getElementById('gbSummary').textContent=`Synced: ${Math.round(kcal)} kcal · ${Math.round(prot)}g protein · ${fat}g fat · ${carb}g carbs`;
+  toast('Gabit totals saved ✓',true);
+}
 function addSnack(name,kcal,protein){
   T.snacks.push({name,kcal,protein,id:Date.now()});
   persist(); renderSnacks(); updCal();
@@ -913,6 +940,14 @@ function renderNutrition(){
   if(T.totalBurned){
     document.getElementById('totalBurned').value=T.totalBurned;
     updDeficit();
+  }
+  const gabitEntry = T.snacks.find(s=>s.id==='gabit-total');
+  if(gabitEntry){
+    document.getElementById('gbKcal').value=gabitEntry.kcal;
+    document.getElementById('gbProt').value=gabitEntry.protein;
+    document.getElementById('gbFat').value=T.gabitFat||'';
+    document.getElementById('gbCarb').value=T.gabitCarb||'';
+    document.getElementById('gbSummary').textContent=`Synced: ${gabitEntry.kcal} kcal · ${gabitEntry.protein}g protein · ${T.gabitFat||0}g fat · ${T.gabitCarb||0}g carbs`;
   }
   const isWE = !started() || DOW===0||DOW===5||DOW===6;
   document.getElementById('mealG').innerHTML = isWE
