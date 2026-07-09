@@ -474,74 +474,75 @@ const SUPPS=[
   {id:'acv', n:'ACV Tablet',   t:'Blood sugar'},
   {id:'glut',n:'Glutathione',  t:'Liver support'},
 ];
-// Workout schedule by day-of-week
-const DTYPE = ['badminton','push','pull','walk','push','pull','walk'];
+// Workout schedule by day-of-week — Mon: Push · Tue: Walk · Wed: Pull · Thu–Sat: Walk · Sun: Badminton
+const DTYPE = ['badminton','push','walk','pull','walk','walk','walk'];
+const DAYS_SHORT = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const PUSH={
   1:[
-    {n:'Dumbbell Floor Press',s:'4×12',w:'2×10 kg', t:'Elbows at 45°',          yt:'Qu5SDuZ1h3I'},
-    {n:'Shoulder Press',      s:'4×12',w:'2×7.5 kg',t:'Squeeze at top',          yt:'qEwKCR5JCog'},
-    {n:'Lateral Raise',       s:'3×15',w:'2×5 kg',  t:'Lead with elbows',        yt:'3VcKaXpzqRo'},
-    {n:'Tricep Kickback',     s:'3×15',w:'1×10 kg', t:'Upper arm parallel',      yt:'PsGGPXKdg4Q'},
-    {n:'Plank',               s:'3×45s',w:'BW',     t:'Squeeze glutes',          yt:'ASdvSqZFhyA'},
-    {n:'Dead Bug',            s:'3×10/side',w:'BW', t:'Back flat to floor',      yt:'4XLEnwUr1d8'},
+    {n:'Barbell Floor Press',s:'4×10',w:'Barbell ~10 kg',t:'Lie on mat, elbows 45°, controlled descent to floor · Band-stack once this feels light',yt:'Qu5SDuZ1h3I'},
+    {n:'Dumbbell Shoulder Press (seated on stool)',s:'4×12',w:'2×5 kg',t:'Stool for back support, press straight up',yt:'qEwKCR5JCog'},
+    {n:'Lateral Raise',s:'3×15',w:'2×2.5 kg or band',t:'Lead with elbows, slow up',yt:'3VcKaXpzqRo'},
+    {n:'Tricep Kickback',s:'3×15',w:'1×5 kg',t:'Upper arm parallel to floor',yt:'PsGGPXKdg4Q'},
+    {n:'Ab Roller',s:'3×8',w:'Bodyweight',t:'Keep hips level, brace core tight',yt:'wFgHbDJhkao'},
+    {n:'Plank',s:'3×45s',w:'Bodyweight',t:'Squeeze glutes, breathe normally',yt:'ASdvSqZFhyA'},
   ],
   2:[
-    {n:'Dumbbell Floor Press',s:'4×14',w:'2×10 kg', t:'2 sec down',              yt:'Qu5SDuZ1h3I'},
-    {n:'Shoulder Press',      s:'4×14',w:'2×7.5 kg',t:'Full lockout',             yt:'qEwKCR5JCog'},
-    {n:'Lateral Raise',       s:'3×18',w:'2×5 kg',  t:'Slight forward lean',     yt:'3VcKaXpzqRo'},
-    {n:'Tricep Kickback',     s:'3×18',w:'1×10 kg', t:'Squeeze at extension',    yt:'PsGGPXKdg4Q'},
-    {n:'Plank',               s:'3×60s',w:'BW',     t:'Brace hard',              yt:'ASdvSqZFhyA'},
-    {n:'Dead Bug',            s:'3×12/side',w:'BW', t:'Slow and controlled',     yt:'4XLEnwUr1d8'},
+    {n:'Barbell Floor Press',s:'4×12',w:'Barbell ~10 kg',t:'2 sec down, controlled · Band-stack once this feels light',yt:'Qu5SDuZ1h3I'},
+    {n:'Dumbbell Shoulder Press (seated on stool)',s:'4×14',w:'2×5 kg',t:'Full lockout at top',yt:'qEwKCR5JCog'},
+    {n:'Lateral Raise',s:'3×18',w:'2×2.5 kg or band',t:'Slight forward lean',yt:'3VcKaXpzqRo'},
+    {n:'Band Pull-Apart',s:'3×20',w:'Light band',t:'Arms straight, pull to chest',yt:'j7ib5H1hJDQ'},
+    {n:'Ab Roller',s:'3×12',w:'Bodyweight',t:'Full extension if possible',yt:'wFgHbDJhkao'},
+    {n:'Plank',s:'3×60s',w:'Bodyweight',t:'Shoulder taps if easy',yt:'ASdvSqZFhyA'},
   ],
   3:[
-    {n:'Floor Press (4s ecc.)',s:'4×10',w:'2×10 kg',t:'4s down · 1s pause · explode', yt:'Qu5SDuZ1h3I'},
-    {n:'Shoulder Press (paused)',s:'4×10',w:'2×7.5 kg',t:'2s pause at bottom',   yt:'qEwKCR5JCog'},
-    {n:'Lateral Raise',       s:'4×15',w:'2×5 kg',  t:'3s hold at top',          yt:'3VcKaXpzqRo'},
-    {n:'Tricep Kickback',     s:'4×12',w:'1×10 kg', t:'Full pause at lockout',   yt:'PsGGPXKdg4Q'},
-    {n:'Plank',               s:'3×75s',w:'BW',     t:'Add shoulder taps',       yt:'ASdvSqZFhyA'},
-    {n:'Dead Bug (slow)',      s:'4×10/side',w:'BW',t:'5s per rep',              yt:'4XLEnwUr1d8'},
+    {n:'Barbell Floor Press (4s ecc.)',s:'4×10',w:'Barbell ~10 kg',t:'4s down · 1s pause · explode up · Band-stack once this feels light',yt:'Qu5SDuZ1h3I'},
+    {n:'Dumbbell Shoulder Press (paused, on stool)',s:'4×10',w:'2×5 kg',t:'2s pause at bottom',yt:'qEwKCR5JCog'},
+    {n:'Lateral Raise (hold)',s:'4×12',w:'2×2.5 kg or band',t:'3s hold at top',yt:'3VcKaXpzqRo'},
+    {n:'Overhead Press (Barbell, standing)',s:'3×10',w:'Barbell ~10 kg',t:'Strict press, no leg drive · Band-stack once this feels light',yt:'2yjwXTZgjDc'},
+    {n:'Ab Roller',s:'4×10',w:'Bodyweight',t:'Slow out, slow back',yt:'wFgHbDJhkao'},
+    {n:'Plank',s:'3×75s',w:'Bodyweight',t:'Max tension throughout',yt:'ASdvSqZFhyA'},
   ],
   4:[
-    {n:'Floor Press → superset',s:'5×10',w:'2×10 kg',t:'Superset with lateral raise',yt:'Qu5SDuZ1h3I'},
-    {n:'Lateral Raise → superset',s:'5×15',w:'2×5 kg',t:'No rest · 90s after pair',yt:'3VcKaXpzqRo'},
-    {n:'Shoulder Press → superset',s:'5×10',w:'2×7.5 kg',t:'Superset with kickback',yt:'qEwKCR5JCog'},
-    {n:'Tricep Kickback → superset',s:'5×12',w:'1×10 kg',t:'No rest · 90s after pair',yt:'PsGGPXKdg4Q'},
-    {n:'Plank',               s:'4×75s',w:'BW',     t:'Weighted plate if available',yt:'ASdvSqZFhyA'},
-    {n:'Dead Bug',            s:'4×12/side',w:'BW', t:'Quality over speed',      yt:'4XLEnwUr1d8'},
+    {n:'Barbell Floor Press → superset',s:'5×10',w:'Barbell ~10 kg',t:'Superset with lateral raise · Band-stack once this feels light',yt:'Qu5SDuZ1h3I'},
+    {n:'Lateral Raise → superset',s:'5×15',w:'Band or 2×2.5 kg',t:'No rest · 90s after pair',yt:'3VcKaXpzqRo'},
+    {n:'Overhead Press → superset (standing)',s:'5×10',w:'Barbell ~10 kg',t:'Superset with pull-apart',yt:'2yjwXTZgjDc'},
+    {n:'Band Pull-Apart → superset',s:'5×20',w:'Medium band',t:'No rest · 90s after pair',yt:'j7ib5H1hJDQ'},
+    {n:'Ab Roller',s:'4×12',w:'Bodyweight',t:'Full extension every rep',yt:'wFgHbDJhkao'},
+    {n:'Plank',s:'4×75s',w:'Bodyweight',t:'Add a plate on your back if easy',yt:'ASdvSqZFhyA'},
   ],
 };
 const PULL={
   1:[
-    {n:'Kettlebell Swing',    s:'4×20',w:'20 kg',   t:'Hips forward, not arms',  yt:'mKDIuUbH94k'},
-    {n:'Romanian Deadlift',   s:'4×12',w:'20 kg',   t:'Hinge at hips, soft knee',yt:'JCXUYuzwNrM'},
-    {n:'Goblet Squat',        s:'4×15',w:'15–20 kg',t:'Chest up, knees track',   yt:'MxsFDhcyFyE'},
-    {n:'Dumbbell Row',        s:'4×12/side',w:'1×15 kg',t:'Pull to hip',         yt:'roCP3HXxEJg'},
-    {n:'Bicep Curl',          s:'3×15',w:'2×10 kg', t:'No swinging',             yt:'ykJmrZ5v0Oo'},
-    {n:'Single Leg Calf Raise',s:'3×20/leg',w:'BW', t:'Full range',              yt:'mUFeqmDJvEE'},
+    {n:'Barbell Deadlift',s:'4×8',w:'Barbell ~10 kg',t:'Hinge at hips, bar close to body · Band-stack once this feels light',yt:'op9kVnSso6Q'},
+    {n:'Bent-Over Row (Barbell)',s:'4×10',w:'Barbell ~10 kg',t:'Pull to lower chest, squeeze lats · Band-stack once this feels light',yt:'9efgcAjQe7E'},
+    {n:'Goblet Squat',s:'4×15',w:'KB ~10 kg',t:'Chest up, knees track toes · Band-stack once this feels light',yt:'MxsFDhcyFyE'},
+    {n:'Dumbbell Row (single-arm)',s:'4×12/side',w:'1×8 kg',t:'Pull to hip, squeeze blade',yt:'roCP3HXxEJg'},
+    {n:'Banded Bicep Curl',s:'3×15',w:'Medium band',t:'Stand on band, full range',yt:'av7-8igZwpI'},
+    {n:'Single Leg Calf Raise',s:'3×20/leg',w:'Bodyweight — stool for balance',t:'Full range, all the way up',yt:'mUFeqmDJvEE'},
   ],
   2:[
-    {n:'Kettlebell Swing',    s:'4×25',w:'20 kg',   t:'Explosive hip snap',      yt:'mKDIuUbH94k'},
-    {n:'Romanian Deadlift',   s:'4×14',w:'20 kg',   t:'Feel hamstring stretch',  yt:'JCXUYuzwNrM'},
-    {n:'Goblet Squat',        s:'4×18',w:'20 kg',   t:'2s pause at bottom',      yt:'MxsFDhcyFyE'},
-    {n:'Dumbbell Row',        s:'4×14/side',w:'1×15 kg',t:'Row to hip',          yt:'roCP3HXxEJg'},
-    {n:'Bicep Curl',          s:'3×18',w:'2×10 kg', t:'Slow on the way down',    yt:'ykJmrZ5v0Oo'},
-    {n:'Single Leg Calf Raise',s:'3×25/leg',w:'BW', t:'Hold dumbbell for load',  yt:'mUFeqmDJvEE'},
+    {n:'Barbell Deadlift',s:'4×10',w:'Barbell ~10 kg',t:'Brace core hard before pulling · Band-stack once this feels light',yt:'op9kVnSso6Q'},
+    {n:'Bent-Over Row (Barbell)',s:'4×12',w:'Barbell ~10 kg',t:'2s hold at top · Band-stack once this feels light',yt:'9efgcAjQe7E'},
+    {n:'Goblet Squat',s:'4×18',w:'KB ~10 kg',t:'2s pause at bottom · Band-stack once this feels light',yt:'MxsFDhcyFyE'},
+    {n:'Banded Face Pull',s:'3×20',w:'Medium band',t:'Anchor at eye level, pull to face',yt:'V8dZ3x_4MCU'},
+    {n:'Dumbbell Row (single-arm)',s:'4×14/side',w:'1×8 kg',t:'Row to hip, not armpit',yt:'roCP3HXxEJg'},
+    {n:'Single Leg Calf Raise',s:'3×25/leg',w:'Hold light DB for load',t:'Slow and full range',yt:'mUFeqmDJvEE'},
   ],
   3:[
-    {n:'Kettlebell Swing',    s:'5×20',w:'20 kg',   t:'Max hip power — 5 sets',  yt:'mKDIuUbH94k'},
-    {n:'Single Leg RDL (intro)',s:'3×8/leg',w:'10 kg',t:'Hold wall if needed',   yt:'gnd1oGNUYpg'},
-    {n:'Romanian Deadlift',   s:'4×10',w:'20 kg',   t:'4s eccentric',            yt:'JCXUYuzwNrM'},
-    {n:'Goblet Squat (paused)',s:'4×12',w:'20 kg',  t:'3s pause, explode up',    yt:'MxsFDhcyFyE'},
-    {n:'Dumbbell Row',        s:'4×12/side',w:'1×15 kg',t:'3s hold at top',      yt:'roCP3HXxEJg'},
-    {n:'Bicep Curl (4s ecc.)',s:'3×10',w:'2×10 kg', t:'Slow down, fast up',      yt:'ykJmrZ5v0Oo'},
+    {n:'Barbell Deadlift (4s ecc.)',s:'4×8',w:'Barbell ~10 kg',t:'4s lowering, controlled · Band-stack once this feels light',yt:'op9kVnSso6Q'},
+    {n:'Single Leg RDL',s:'3×10/leg',w:'KB or DB ~8 kg',t:'Hip hinge, soft knee, balance',yt:'gnd1oGNUYpg'},
+    {n:'Bent-Over Row (Barbell)',s:'4×10',w:'Barbell ~10 kg',t:'3s hold at top · Band-stack once this feels light',yt:'9efgcAjQe7E'},
+    {n:'Banded Squat',s:'4×15',w:'Heavy band above knees',t:'Band adds resistance at top',yt:'aclHkVaku9U'},
+    {n:'Banded Face Pull',s:'4×20',w:'Medium band',t:'External rotation at end',yt:'V8dZ3x_4MCU'},
+    {n:'Dumbbell Row (slow, single-arm)',s:'4×12/side',w:'1×8 kg',t:'3s up, 3s down',yt:'roCP3HXxEJg'},
   ],
   4:[
-    {n:'Kettlebell Swing',    s:'5×20',w:'20 kg',   t:'Max power — cardio+strength',yt:'mKDIuUbH94k'},
-    {n:'Bulgarian Split Squat',s:'5×10/leg',w:'2×10 kg',t:'Rear foot on chair',  yt:'2C-uNgKwPLE'},
-    {n:'Single Leg RDL',      s:'5×10/leg',w:'15 kg',t:'Balance + strength',     yt:'gnd1oGNUYpg'},
-    {n:'Dumbbell Row → superset',s:'5×12/side',w:'1×15 kg',t:'Superset with curl',yt:'roCP3HXxEJg'},
-    {n:'Bicep Curl → superset',s:'5×12',w:'2×10 kg',t:'No rest between pair',   yt:'ykJmrZ5v0Oo'},
-    {n:'Single Leg Calf Raise',s:'4×25/leg',w:'BW', t:'Slow and full range',     yt:'mUFeqmDJvEE'},
+    {n:'Barbell Deadlift',s:'5×8',w:'Barbell ~10 kg',t:'Max power — main strength move · Band-stack once this feels light',yt:'op9kVnSso6Q'},
+    {n:'Bulgarian Split Squat',s:'5×10/leg',w:'2×5 kg DBs',t:'Rear foot on stool, knee tracks',yt:'2C-uNgKwPLE'},
+    {n:'Single Leg RDL',s:'5×10/leg',w:'KB ~10 kg',t:'Balance + strength combined',yt:'gnd1oGNUYpg'},
+    {n:'Bent-Over Row → superset',s:'5×12',w:'Barbell ~10 kg',t:'Superset with face pull',yt:'9efgcAjQe7E'},
+    {n:'Banded Face Pull → superset',s:'5×20',w:'Medium band',t:'No rest · 90s after pair',yt:'V8dZ3x_4MCU'},
+    {n:'Single Leg Calf Raise',s:'4×25/leg',w:'Hold light DB',t:'Slow and full range',yt:'mUFeqmDJvEE'},
   ],
 };
 const TLBL={skipped_workout:'Skipped workout',extra_food:'Extra food',skipped_walk:'Skipped walk',bad_sleep:'Bad sleep',alcohol_extra:'Extra alcohol',stress_high:'High stress'};
@@ -946,7 +947,7 @@ function renderWorkout(){
   }
   if(dt==='walk'){
     const isSat=DOW===6;
-    el.innerHTML=`<div class="rcard"><div class="remi">🚶</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">${isSat?'Saturday Walk':'Wednesday Walk'}</div><div style="font-size:13px;color:var(--mu)">60 min · burns extra calories${isSat?' · offsets weekend eating':''}</div></div>`;
+    el.innerHTML=`<div class="rcard"><div class="remi">🚶</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">${DAYS_SHORT[DOW]} Walk</div><div style="font-size:13px;color:var(--mu)">60 min · burns extra calories${isSat?' · offsets weekend eating':''}</div></div>`;
     return;
   }
   if(dt==='badminton'){
