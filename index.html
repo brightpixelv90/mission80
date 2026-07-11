@@ -308,6 +308,10 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
   <div class="slbl">Supplements tonight</div>
   <div class="info">Tap each one as you take it · All at night before sleep</div>
   <div class="spgrid" id="spgrid"></div>
+
+  <div class="slbl">Beard &amp; oral care</div>
+  <div class="info" id="beardBanner"></div>
+  <div class="spgrid" id="beardgrid"></div>
 </div>
 
 <!-- NUTRITION -->
@@ -477,6 +481,7 @@ const SUPPS=[
 // Workout schedule by day-of-week — Mon: Push · Tue: Walk · Wed: Pull · Thu–Sat: Walk · Sun: Badminton
 const DTYPE = ['badminton','push','walk','pull','walk','walk','walk'];
 const DAYS_SHORT = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const FIN_START = '2026-07-20'; // Minoboost F (minoxidil + finasteride) arrives
 const PUSH={
   1:[
     {n:'Barbell Floor Press',s:'4×10',w:'Barbell ~10 kg',t:'Lie on mat, elbows 45°, controlled descent to floor · Band-stack once this feels light',yt:'Qu5SDuZ1h3I'},
@@ -586,6 +591,7 @@ T.ring   = T.ring   || {};
 T.gs     = T.gs     || T.goalStates || {};
 T.snacks = T.snacks || [];
 T.supps  = T.supps  || {};
+T.beard  = T.beard  || {};
 
 let devPills = [];
 let CH = {};
@@ -662,7 +668,7 @@ function init(){
     const diff=Math.round((parseYMD(TODAY)-parseYMD(G.lastDate))/864e5);
     if(diff>1) G.streak=0;
   }
-  updXP(); renderStreak(); renderGoals(); renderSupps(); renderWorkout();
+  updXP(); renderStreak(); renderGoals(); renderSupps(); renderBeard(); renderWorkout();
   restoreRing(); restoreNutr(); updWtDisp();
   if(T.wt) document.getElementById('wtIn').value=T.wt;
 }
@@ -950,6 +956,37 @@ function togSupp(id,el){
   if(SUPPS.every(s=>T.supps[s.id])) toast('All 9 supplements taken ✓',true);
 }
 
+// ── BEARD & ORAL CARE ─────────────────────────────────────────────────────────
+function renderBeard(){
+  const el=document.getElementById('beardgrid');
+  const banner=document.getElementById('beardBanner');
+  if(!el) return;
+  const finActive = TODAY >= FIN_START;
+  const isNeedleDay = DOW===1 || DOW===4; // Monday & Thursday — 48h+ gap between sessions
+  const isParodontaxDay = DOW===1 || DOW===3 || DOW===5; // Mon/Wed/Fri — stannous fluoride, limited to avoid staining
+  if(banner){
+    if(!finActive){
+      const days=Math.round((parseYMD(FIN_START)-parseYMD(TODAY))/864e5);
+      banner.textContent=`🧴 Minoxidil only for now · Finasteride (Minoboost F) arrives in ${days} day${days!==1?'s':''} · Jul 20`;
+    } else {
+      banner.textContent='🧴 Minoxidil + Finasteride active · Microneedle Mon & Thu, apply solution right after';
+    }
+  }
+  const items=[];
+  if(isNeedleDay) items.push({id:'needle',n:'Microneedle',t:'1.0–1.5mm roller · apply solution right after'});
+  items.push({id:'minox',n:finActive?'Minoxidil + Finasteride':'Minoxidil',t:'Dry skin only · wait 4h+ before wash/sweat'});
+  if(isParodontaxDay) items.push({id:'parodontax',n:'Parodontax Extra rinse',t:'Chlorhexidine mouthwash — rinse only, Mon/Wed/Fri, not indefinitely (staining + short-course product)'});
+  else items.push({id:'listerine',n:'Listerine rinse',t:'Nightly rinse — Parodontax is Mon/Wed/Fri only'});
+  el.innerHTML=items.map(s=>`<div class="spb${T.beard[s.id]?' on':''}" onclick="togBeard('${s.id}',this)">
+    <div class="spd"></div><div><div class="spn">${s.n}</div><div class="spt">${s.t}</div></div>
+  </div>`).join('');
+}
+function togBeard(id,el){
+  T.beard[id]=!T.beard[id];
+  el.classList.toggle('on',T.beard[id]);
+  persist();
+}
+
 // ── PROGRESS ──────────────────────────────────────────────────────────────────
 function renderProgress(){
   const wt=G.curWt||92.6;
@@ -1149,7 +1186,7 @@ function goPage(name, btn){
   try{
     if(name==='progress'){renderProgress();}
     if(name==='nutrition'){renderNutrition();}
-    if(name==='workout'){renderWorkout();renderSupps();}
+    if(name==='workout'){renderWorkout();renderSupps();renderBeard();}
   }catch(e){console.error(e);}
 }
 
